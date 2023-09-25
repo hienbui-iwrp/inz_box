@@ -4,12 +4,11 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-interface IERC1155Collection {
-    function mintNFT(address _to, uint8 _type) external;
-}
+import "./interface/ICampaignTypeNFT1155.sol";
 
-contract ERC1155RandomCollection is ERC1155, IERC1155Collection {
-    event MintNFT(address _to, uint256 tokenId, uint8 _type);
+contract ERC1155RandomCollection is ERC1155, ICampaignTypeNFT1155 {
+    event MintItem(address _to, uint256 tokenId, uint8 _type);
+    event SetBoxAddress(address _old, address _new);
 
     address boxAddress;
 
@@ -27,7 +26,7 @@ contract ERC1155RandomCollection is ERC1155, IERC1155Collection {
     mapping(uint256 => string) nftUris;
 
     modifier fromBox() {
-        require(msg.sender == boxAddress, "caller is not box");
+        require(msg.sender == boxAddress, "Caller is not box");
         _;
     }
 
@@ -51,28 +50,29 @@ contract ERC1155RandomCollection is ERC1155, IERC1155Collection {
         Counters.reset(idCounter);
     }
 
-    function updateBox(address box) external {
+    function setBoxAddress(address box) external {
+        address oldAddress = boxAddress;
         boxAddress = box;
+        emit SetBoxAddress(oldAddress, box);
     }
 
-    function mintNFT(address _to, uint8 _type) external {
+    function mintNFT(address _to, uint8 _type) external fromBox {
         uint256 id = Counters.current(idCounter);
 
         _mint(_to, id, 1, "");
 
         nftTypes[id] = _type;
         nftUris[id] = typeUri[_type];
-
         Counters.increment(idCounter);
 
-        emit MintNFT(_to, id, _type);
+        emit MintItem(_to, id, _type);
     }
 
     function getNftType(uint256 id) public view returns (uint8) {
         return nftTypes[id];
     }
 
-    function getCurrentId() public view returns (uint256) {
+    function getNextId() public view returns (uint256) {
         return Counters.current(idCounter);
     }
 }

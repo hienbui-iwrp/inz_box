@@ -4,25 +4,25 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 // import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 // import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "./ERC1155RandomCollection.sol";
+import "./interface/ICampaignTypeNFT1155.sol";
+import "./interface/IBoxCampaign.sol";
 
-interface IBoxCollection {
-    function mintBox(address _to) external;
-
-    function openBox(uint256 boxId) external;
-}
-
-contract BoxCollection is IBoxCollection, ERC1155 {
+contract BoxCollection is IBoxCampaign, ERC1155 {
     event MintBox(address buyer, uint256 boxId);
     event OpenBox(uint256 tokenId);
 
-    IERC1155Collection itemCollection;
+    // collection mint items
+    ICampaignTypeNFT1155 itemCollection;
 
     Counters.Counter idCounter;
+
+    // Signer for mint with signature
+    address public signer;
 
     // current supply
     uint256 supply;
 
+    // list types
     uint8[] types;
 
     // type => supply number
@@ -43,7 +43,7 @@ contract BoxCollection is IBoxCollection, ERC1155 {
             _types.length == _supply.length,
             "don't provide enought supply for each type"
         );
-        itemCollection = IERC1155Collection(_itemCollection);
+        itemCollection = ICampaignTypeNFT1155(_itemCollection);
         idCounter._value = 0;
 
         types = _types;
@@ -53,7 +53,22 @@ contract BoxCollection is IBoxCollection, ERC1155 {
     }
 
     function updateNftCollection(address _itemCollection) public {
-        itemCollection = IERC1155Collection(_itemCollection);
+        itemCollection = ICampaignTypeNFT1155(_itemCollection);
+    }
+
+    function updateSupply(
+        uint8[] memory _types,
+        uint256[] memory _supply
+    ) public {
+        require(
+            _types.length == _supply.length,
+            "don't provide enought supply for each type"
+        );
+
+        types = _types;
+        for (uint i = 0; i < _types.length; i++) {
+            typeSuplies[_types[i]] = _supply[i];
+        }
     }
 
     function mintBox(address _to) external {
@@ -71,7 +86,7 @@ contract BoxCollection is IBoxCollection, ERC1155 {
     function openBox(uint256 boxId) external {
         require(boxOpened[boxId] == false, "Box have already been opened");
 
-        uint8 typeMint = getNFTType();
+        uint8 typeMint = randomType();
         itemCollection.mintNFT(boxOwner[boxId], typeMint);
         typeSuplies[typeMint]--;
 
@@ -84,12 +99,14 @@ contract BoxCollection is IBoxCollection, ERC1155 {
         return Counters.current(idCounter);
     }
 
-    function getBoxOwner(uint256 id) public view returns (address) {
-        return boxOwner[id];
-    }
+    function randomType() internal view returns (uint8) {
+        uint256 rand = uint256(
+            keccak256(
+                abi.encodePacked(msg.sender, block.timestamp, block.number)
+            )
+        );
+        rand = rand % getTotalSupply();
 
-    function getNFTType() public view returns (uint8) {
-        uint256 rand = genRandomNumber() % getTotalSupply();
         uint256 current = 0;
         for (uint8 i = 0; i < types.length; i++) {
             current += typeSuplies[types[i]];
@@ -101,20 +118,11 @@ contract BoxCollection is IBoxCollection, ERC1155 {
         return types[0];
     }
 
-    function getTotalSupply() public view returns (uint256) {
+    function getTotalSupply() internal view returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < types.length; i++) {
             total += typeSuplies[types[i]];
         }
         return total;
-    }
-
-    function genRandomNumber() public view returns (uint256) {
-        return
-            uint256(
-                keccak256(
-                    abi.encodePacked(msg.sender, block.timestamp, block.number)
-                )
-            );
     }
 }

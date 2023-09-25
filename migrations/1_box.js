@@ -14,7 +14,7 @@ function wf(name, address) {
 const deployments = {
     erc1155RandomCollection: false,
     boxCollection: false,
-    config1155: true,
+    configItemCollection: true,
 };
 
 module.exports = async function (deployer, network, accounts) {
@@ -24,7 +24,7 @@ module.exports = async function (deployer, network, accounts) {
     var _devWallet = process.env.DEV_WALLET;
 
     var types = [1, 2, 3, 4, 5]
-    var uri = ["1", "2", "3", "4", "5"]
+    var uri = ["/1", "/2", "/3", "/4", "/5"]
     var nullAddress = "0x0000000000000000000000000000000000000000"
     var supplies = [5000, 2000, 500, 100, 10]
 
@@ -45,8 +45,6 @@ module.exports = async function (deployer, network, accounts) {
      *      0.2.    Deploy BoxCollection
      */
     if (deployments.boxCollection) {
-
-        // await deployer.deploy(BoxCollection, _erc1155RandomCollection.address);
         await deployer.deploy(BoxCollection, _erc1155RandomCollection.address, types, supplies);
         var _boxCollection = await BoxCollection.deployed();
         wf("BoxCollection", _boxCollection.address);
@@ -54,8 +52,10 @@ module.exports = async function (deployer, network, accounts) {
         var _boxCollection = await BoxCollection.at(process.env.BoxCollection);
     }
 
-    // update box collection
-    if (deployments.config1155) {
+    /**
+    *      0.3.    config Item Collection
+    */
+    if (deployments.configItemCollection) {
         await _erc1155RandomCollection.updateBox(_boxCollection.address)
         console.log("update box address succesfully")
     }
