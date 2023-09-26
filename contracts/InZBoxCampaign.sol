@@ -1,128 +1,306 @@
-pragma solidity ^0.8.9;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-// import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-// import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "./interface/ICampaignTypeNFT1155.sol";
-import "./interface/IBoxCampaign.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+// import "../libraries/InZNFTDetail.sol";
+// import "../libraries/InZNFTTypeDetail.sol";
+// import "../interfaces/IInZNFTMarket.sol";
+import "./utils/InterfaceFunction.sol";
+import "./interfaces/IBoxCampaign.sol";
+import "./interfaces/INFTOpeningItem.sol";
 
-contract BoxCollection is IBoxCampaign, ERC1155 {
-    event MintBox(address buyer, uint256 boxId);
-    event OpenBox(uint256 tokenId);
+contract InZBoxCampaign is
+    ERC721Upgradeable,
+    AccessControlUpgradeable,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    IBoxCampaign
+{
+    ///
+    ///             EXTERNAL USING
+    ///
+    using Counters for Counters.Counter;
 
-    // collection mint items
-    ICampaignTypeNFT1155 itemCollection;
+    ///
+    ///             STRUCTS DEFINITION
 
-    Counters.Counter idCounter;
+    ///
+    ///             EVENTS DEFINATION
+    ///
+    event BoxBought(address buyer, uint256 tokenId);
 
-    // Signer for mint with signature
-    address public signer;
+    event SetNewPayToken(address oldToken, address newToken);
 
-    // current supply
-    uint256 supply;
+    event SetNewNftOpeningItem(address oldAddress, address newAddress);
 
-    // list types
-    uint8[] types;
+    event OpenBox(address owner, uint256 tokenId);
 
-    // type => supply number
-    mapping(uint8 => uint256) typeSuplies;
+    ///
+    ///             STORAGE DATA DECLARATIONS
+    ///
+    bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 internal constant DESIGNER_ROLE = keccak256("DESIGNER_ROLE");
+    bytes32 internal constant WITHDRAW_ROLE = keccak256("WITHDRAW_ROLE");
 
-    // box id => opened or not
-    mapping(uint256 => bool) boxOpened;
+    // Pay Token for minting action
+    IERC20 public s_payToken;
 
-    // box id => owner address
-    mapping(uint256 => address) boxOwner;
+    // tokenURI of box
+    string private s_tokenUri;
 
-    constructor(
-        address _itemCollection,
-        uint8[] memory _types,
-        uint256[] memory _supply
-    ) public ERC1155("Box Nothing") {
+    // Counter for tokenId
+    Counters.Counter internal s_tokenIdCounter;
+
+    // Item that can be opened via opeing boxes
+    INFTOpeningItem public s_nftOpeningItem;
+
+    // Mapping tokenId to BoxDetail
+    mapping(address => uint256[]) private s_boxesOwner;
+
+    // Mapping tokenId and status of opened or not
+    mapping(uint256 => bool) private isOpened;
+
+    // OPTION: Fixed, auto-increase tokenId or not
+    bool private s_isAutoIncreaseId;
+
+    // Total supply of Box campaign
+    uint256 private s_totalSupply;
+
+    // Price of the box
+    uint256 private s_price;
+
+    // Total box was minted
+    uint256 private s_totalMinted;
+
+    // Duration of the campaign
+    uint256 private s_startTimeToBuy;
+    uint256 private s_endTimeToBuy;
+
+    // mapping token id to nft for selecting type to mint
+    uint8[] s_nftTypes;
+
+    ///
+    ///             MODIFIER
+    ///
+    modifier isApproveEnough(
+        IERC20 token,
+        address owner,
+        address spender,
+        uint256 checkingAmount
+    ) {
         require(
-            _types.length == _supply.length,
-            "don't provide enought supply for each type"
+            token.allowance(owner, spender) >= checkingAmount,
+            "Not approve enough token"
         );
-        itemCollection = ICampaignTypeNFT1155(_itemCollection);
-        idCounter._value = 0;
-
-        types = _types;
-        for (uint i = 0; i < _types.length; i++) {
-            typeSuplies[_types[i]] = _supply[i];
-        }
+        _;
     }
 
-    function updateNftCollection(address _itemCollection) public {
-        itemCollection = ICampaignTypeNFT1155(_itemCollection);
-    }
-
-    function updateSupply(
-        uint8[] memory _types,
-        uint256[] memory _supply
-    ) public {
+    modifier isValidTimeToMint() {
         require(
-            _types.length == _supply.length,
-            "don't provide enought supply for each type"
+            block.timestamp >= s_startTimeToBuy,
+            "The campain's not started yet"
         );
-
-        types = _types;
-        for (uint i = 0; i < _types.length; i++) {
-            typeSuplies[_types[i]] = _supply[i];
-        }
-    }
-
-    function mintBox(address _to) external {
-        uint256 id = Counters.current(idCounter);
-        _mint(_to, id, 1, "");
-
-        boxOpened[id] = false;
-        boxOwner[id] = _to;
-
-        Counters.increment(idCounter);
-
-        emit MintBox(_to, id);
-    }
-
-    function openBox(uint256 boxId) external {
-        require(boxOpened[boxId] == false, "Box have already been opened");
-
-        uint8 typeMint = randomType();
-        itemCollection.mintNFT(boxOwner[boxId], typeMint);
-        typeSuplies[typeMint]--;
-
-        boxOpened[boxId] = true;
-
-        emit OpenBox(boxId);
-    }
-
-    function getCurrentBoxId() public view returns (uint256) {
-        return Counters.current(idCounter);
-    }
-
-    function randomType() internal view returns (uint8) {
-        uint256 rand = uint256(
-            keccak256(
-                abi.encodePacked(msg.sender, block.timestamp, block.number)
-            )
+        require(
+            block.timestamp <= s_endTimeToBuy,
+            "The campaign's already ended"
         );
-        rand = rand % getTotalSupply();
-
-        uint256 current = 0;
-        for (uint8 i = 0; i < types.length; i++) {
-            current += typeSuplies[types[i]];
-            if (rand < current) {
-                return types[i];
-            }
-        }
-
-        return types[0];
+        _;
     }
 
-    function getTotalSupply() internal view returns (uint256) {
-        uint256 total = 0;
-        for (uint256 i = 0; i < types.length; i++) {
-            total += typeSuplies[types[i]];
+    modifier isUnreachLimit() {
+        require(s_totalMinted < s_totalSupply, "Sold out");
+        _;
+    }
+
+    function initialize(
+        string memory _uri,
+        IERC20 _payToken,
+        string memory _name,
+        string memory _symbol,
+        uint256 _startTimeToBuy,
+        uint256 _endTimeToBuy,
+        bool _isAutoIncreaseId,
+        uint256 _totalSupply,
+        uint256 _price,
+        uint8[] memory _nftTypes
+    ) external initializer {
+        s_payToken = _payToken;
+        s_tokenUri = _uri;
+        s_startTimeToBuy = _startTimeToBuy;
+        s_endTimeToBuy = _endTimeToBuy;
+        s_isAutoIncreaseId = _isAutoIncreaseId;
+        s_totalSupply = _totalSupply;
+        s_price = _price;
+        s_nftTypes = _nftTypes;
+
+        __ERC721_init(_name, _symbol);
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+        _transferOwnership(tx.origin);
+
+        _setupRole(DEFAULT_ADMIN_ROLE, tx.origin);
+        _setupRole(ADMIN_ROLE, tx.origin);
+        _setupRole(DESIGNER_ROLE, tx.origin);
+        _setupRole(WITHDRAW_ROLE, tx.origin);
+    }
+
+    function mintBox(
+        address to
+    )
+        external
+        isApproveEnough(s_payToken, msg.sender, address(this), s_price)
+        isValidTimeToMint
+        isUnreachLimit
+    {
+        uint256 _executeId;
+        uint256 _tokenId = s_tokenIdCounter.current();
+        if (!s_isAutoIncreaseId) {
+            require(!_exists(_tokenId), "Mint Box: tokenId's already existed");
+            _executeId = _tokenId;
+        } else {
+            s_tokenIdCounter.increment();
+            _executeId = s_tokenIdCounter.current();
         }
-        return total;
+
+        // Transfer token from buyer to campagin
+        s_payToken.transferFrom(msg.sender, address(this), s_price);
+
+        // Mint box for buyer
+        _mint(msg.sender, _executeId);
+
+        // Update state
+        s_totalMinted += 1;
+        s_boxesOwner[msg.sender].push(_executeId);
+        isOpened[_executeId] = false;
+
+        emit BoxBought(msg.sender, _executeId);
+    }
+
+    function openBox(address to, uint256 boxId) external {
+        require(ownerOf(boxId) == msg.sender, "You did not owned the token");
+        require(!isOpened[boxId], "Box's already opened");
+
+        // Call NFT Opening Item to open box
+        //s_nftOpeningItem.mintFromBoxOpening(msg.sender);
+
+        // Save state
+        isOpened[boxId] = true;
+        emit OpenBox(msg.sender, boxId);
+    }
+
+    /**
+     *  @notice     This function is only used for estimation purpose, therefore the call will always revert and encode the result in the revert data.
+     *  @dev        This function's used for estimate gas for a execution call
+     *  @param to           The address of caller
+     *  @param value        The value of msg.value
+     *  @param data         The data sent with tx
+     *  @param operation    the operation of tx
+     */
+    function requiredTxGas(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        InterfaceFunction.Operation operation
+    )
+        external
+        onlyRole(ADMIN_ROLE) // returns (uint256)
+    {
+        InterfaceFunction.requiredTxGas(to, value, data, operation);
+    }
+
+    /**
+     * This function allow ADMIN can execute a function witj specificed logic and params flexibily
+     * @param to The caller of tx
+     * @param value The msg.value of tx
+     * @param txGas The estimated gas using for the tx
+     * @param data The data comming with the tx
+     * @param operation The operation of tx
+     */
+    function execTx(
+        address to,
+        uint256 value,
+        uint256 txGas,
+        bytes calldata data,
+        InterfaceFunction.Operation operation
+    ) external onlyRole(ADMIN_ROLE) {
+        InterfaceFunction.execTx(to, value, txGas, data, operation);
+    }
+
+    ///
+    ///         SETTERS
+    ///
+    function setNftOpeningItem(
+        INFTOpeningItem _openingItem
+    ) external onlyRole(DESIGNER_ROLE) {
+        require(
+            _openingItem != s_nftOpeningItem,
+            "Set New NFT Opening Item: The new one must be different from the old one"
+        );
+        address oldAddress = address(s_nftOpeningItem);
+        s_nftOpeningItem = _openingItem;
+        emit SetNewNftOpeningItem(oldAddress, address(s_nftOpeningItem));
+    }
+
+    function setPayToken(IERC20 _newPayToken) external onlyRole(DESIGNER_ROLE) {
+        require(
+            _newPayToken != s_payToken,
+            "Set New Pay Token: The new one must be different from the old one"
+        );
+        address oldPayToken = address(s_payToken);
+        s_payToken = _newPayToken;
+        emit SetNewPayToken(oldPayToken, address(s_nftOpeningItem));
+    }
+
+    ///
+    ///         GETTERS
+    ///
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
+        _requireMinted(tokenId);
+        return s_tokenUri;
+    }
+
+    function getListBoxOf(
+        address owner
+    ) external view returns (uint256[] memory) {
+        return s_boxesOwner[owner];
+    }
+
+    ///
+    ///          INHERITANCE FUNCTIONS
+    ///
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        override(ERC721Upgradeable, AccessControlUpgradeable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyRole(ADMIN_ROLE) {}
+
+    ///
+    ///         INTERNAL FUNCTIONS
+    ///
+
+    function _random() private view returns (uint) {
+        return
+            uint256(
+                keccak256(
+                    abi.encodePacked(blockhash(block.number), block.timestamp)
+                )
+            );
     }
 }
