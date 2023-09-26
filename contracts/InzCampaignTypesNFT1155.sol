@@ -6,17 +6,19 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "./interface/ICampaignTypeNFT1155.sol";
 
-contract ERC1155RandomCollection is ERC1155, ICampaignTypeNFT1155 {
+contract InzCampaignTypesNFT1155 is ERC1155, ICampaignTypeNFT1155 {
     event MintItem(address _to, uint256 tokenId, uint8 _type);
     event SetBoxAddress(address _old, address _new);
 
+    // address of box campaign
     address boxAddress;
 
     Counters.Counter idCounter;
 
+    // list nft types
     uint8[] types;
 
-    // type => uri
+    // nft type => uri
     mapping(uint8 => string) typeUri;
 
     // ntf id => type

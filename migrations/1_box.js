@@ -3,8 +3,8 @@ const fs = require("fs");
 
 // command line run: truffle migrate --f 1 --to 1 --network base_goerli -reset --compile-none
 
-var BoxCollection = artifacts.require("BoxCollection");
-var ERC1155RandomCollection = artifacts.require("ERC1155RandomCollection");
+var BoxCampaign = artifacts.require("BoxCampaign");
+var InzCampaignTypesNFT1155 = artifacts.require("InzCampaignTypesNFT1155");
 
 function wf(name, address) {
     fs.appendFileSync("_address.txt", name + "=" + address);
@@ -12,9 +12,9 @@ function wf(name, address) {
 }
 
 const deployments = {
-    erc1155RandomCollection: false,
-    boxCollection: false,
-    configItemCollection: true,
+    inzCampaignTypesNFT1155: true,
+    boxCampaign: true,
+    configItemCampaign: true,
 };
 
 module.exports = async function (deployer, network, accounts) {
@@ -26,17 +26,17 @@ module.exports = async function (deployer, network, accounts) {
     var types = [1, 2, 3, 4, 5]
     var uri = ["/1", "/2", "/3", "/4", "/5"]
     var nullAddress = "0x0000000000000000000000000000000000000000"
-    var supplies = [5000, 2000, 500, 100, 10]
+    var supplies = [5, 4, 3, 2, 1]
 
     /**
      *      0.1.    Deploy ERC1155RandomCollection
      */
-    if (deployments.erc1155RandomCollection) {
-        await deployer.deploy(ERC1155RandomCollection, nullAddress, types, uri);
-        var _erc1155RandomCollection = await ERC1155RandomCollection.deployed();
-        wf("ERC1155RandomCollection", _erc1155RandomCollection.address);
+    if (deployments.inzCampaignTypesNFT1155) {
+        await deployer.deploy(InzCampaignTypesNFT1155, nullAddress, types, uri);
+        var _inzCampaignTypesNFT1155 = await InzCampaignTypesNFT1155.deployed();
+        wf("ERC1155RandomCollection", _inzCampaignTypesNFT1155.address);
     } else {
-        var _erc1155RandomCollection = await ERC1155RandomCollection.at(
+        var _inzCampaignTypesNFT1155 = await InzCampaignTypesNFT1155.at(
             process.env.ERC1155RandomCollection
         );
     }
@@ -44,19 +44,20 @@ module.exports = async function (deployer, network, accounts) {
     /**
      *      0.2.    Deploy BoxCollection
      */
-    if (deployments.boxCollection) {
-        await deployer.deploy(BoxCollection, _erc1155RandomCollection.address, types, supplies);
-        var _boxCollection = await BoxCollection.deployed();
-        wf("BoxCollection", _boxCollection.address);
+    if (deployments.boxCampaign) {
+        await deployer.deploy(BoxCampaign, _inzCampaignTypesNFT1155.address, types, supplies,
+            process.env.SIGNER);
+        var _boxCampaign = await BoxCampaign.deployed();
+        wf("BoxCollection", _boxCampaign.address);
     } else {
-        var _boxCollection = await BoxCollection.at(process.env.BoxCollection);
+        var _boxCampaign = await BoxCampaign.at(process.env.BoxCollection);
     }
 
     /**
     *      0.3.    config Item Collection
     */
-    if (deployments.configItemCollection) {
-        await _erc1155RandomCollection.updateBox(_boxCollection.address)
+    if (deployments.configItemCampaign) {
+        await _inzCampaignTypesNFT1155.setBoxAddress(_boxCampaign.address)
         console.log("update box address succesfully")
     }
 }
