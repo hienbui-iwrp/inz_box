@@ -47,8 +47,8 @@ contract InZCampaignBoxFactory is AccessControl {
     /**
      *          Contructor of the contract
      */
-    constructor() {
-        boxImplementationAddress = address(new InZBoxCampaign());
+    constructor(address _boxImpletationAddress) {
+        boxImplementationAddress = _boxImpletationAddress;
 
         _setupRole(ADMIN_ROLE, msg.sender);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -78,6 +78,7 @@ contract InZCampaignBoxFactory is AccessControl {
         bool _isAutoIncreaseId,
         uint256 _totalSupply,
         uint256 _price,
+        address _feeAddress,
         uint8[] memory _nftType,
         uint256[] memory _amountOfEachNFTType
     ) external onlyRole(ADMIN_ROLE) {
@@ -94,6 +95,7 @@ contract InZCampaignBoxFactory is AccessControl {
             _isAutoIncreaseId,
             _totalSupply,
             _price,
+            _feeAddress,
             _nftType,
             _amountOfEachNFTType
         );

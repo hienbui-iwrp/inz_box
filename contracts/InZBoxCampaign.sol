@@ -39,7 +39,7 @@ contract InZBoxCampaign is
 
     event SetNewNftOpeningItem(address oldAddress, address newAddress);
 
-    event OpenBox(address owner, uint256 tokenId);
+    event OpenBox(address owner, uint256 tokenId, uint8 nftType);
 
     ///
     ///             STORAGE DATA DECLARATIONS
@@ -47,6 +47,9 @@ contract InZBoxCampaign is
     bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 internal constant DESIGNER_ROLE = keccak256("DESIGNER_ROLE");
     bytes32 internal constant WITHDRAW_ROLE = keccak256("WITHDRAW_ROLE");
+
+    // Address receive fee
+    address feeAddress;
 
     // Pay Token for minting action
     IERC20 public s_payToken;
@@ -136,10 +139,14 @@ contract InZBoxCampaign is
         bool _isAutoIncreaseId,
         uint256 _totalSupply,
         uint256 _price,
+        address feeAddress,
         uint8[] memory _nftTypes,
         uint256[] memory _amountOfEachType
     ) external initializer {
-        require(_nftTypes.length == _amountOfEachType.length, "NFT type and amount don't match");
+        require(
+            _nftTypes.length == _amountOfEachType.length,
+            "NFT type and amount don't match"
+        );
 
         s_payToken = _payToken;
         s_tokenUri = _uri;
@@ -150,10 +157,13 @@ contract InZBoxCampaign is
         s_price = _price;
         s_nftTypes = _nftTypes;
 
-        // assign the contract that implement INFTOpening interface
+        // assign the contract that implement INFTOpening interface 
         s_nftOpeningItem = INFTOpeningItem(_nftOpeningItem);
 
-        for (uint i = 0; i < )
+        // create s_supplyOfEachType
+        for (uint i = 0; i < _nftTypes.length; i++) {
+            s_supplyOfEachType[_nftTypes[i]] = _amountOfEachType[i];
+        }
 
         __ERC721_init(_name, _symbol);
         __AccessControl_init();
@@ -166,51 +176,25 @@ contract InZBoxCampaign is
         _setupRole(WITHDRAW_ROLE, tx.origin);
     }
 
-    /// @notice Mint a mystery box to the user
+    /// @notice Mint a mystery box to the user with id specified by the user
     /// @dev Mint directly to whoever call this contract
-    function mintBox()
+    /// @param _tokenId ID of the box that will be minted
+    function mintBox(
+        uint256 _tokenId
+    )
         external
         payable
         isApproveEnough(s_payToken, msg.sender, address(this), s_price)
         isValidTimeToMint
         isUnreachLimit
     {
-        // if erc20 is null then pay with native token
-        uint256 _executeId;
-        uint256 _tokenId = s_tokenIdCounter.current();
-        if (!s_isAutoIncreaseId) {
-            require(!_exists(_tokenId), "Mint Box: tokenId's already existed");
-            _executeId = _tokenId;
-        } else {ể
-            s_tokenIdCounter.increment();
-            _executeId = s_tokenIdCounter.current();
+        if (address(s_payToken) == address(0x0)) {
+            require(msg.value >= s_price, "Don't enough token");
+            payable(feeAddress).transfer(msg.value);
+        } else {
+            s_payToken.transferFrom(msg.sender, feeAddress, s_price);
         }
 
-        // Transfer token from buyer to campagin
-        s_payToken.transferFrom(msg.sender, address(this), s_price);
-
-        // Mint box for buyer
-        _mint(msg.sender, _executeId);
-
-        // Update state
-        s_totalMinted += 1;
-        s_boxesOwner[msg.sender].push(_executeId);
-        isOpened[_executeId] = false;
-
-        emit BoxBought(msg.sender, _executeId);
-    }
-
-    /// @notice Mint a mystery box to the user with id specified by the user
-    /// @dev Mint directly to whoever call this contract
-    /// @param _tokenId ID of the box that will be minted
-    function mintBoxWithSpecifiedID(
-        uint256 _tokenId
-    )
-        external
-        isApproveEnough(s_payToken, msg.sender, address(this), s_price)
-        isValidTimeToMint
-        isUnreachLimit
-    {
         uint256 _executeId;
         if (!s_isAutoIncreaseId) {
             require(!_exists(_tokenId), "Mint Box: tokenId's already existed");
@@ -242,6 +226,9 @@ contract InZBoxCampaign is
         require(!isOpened[boxId], "Box's already opened");
 
         uint256 randomIndex = _random() % s_nftTypes.length;
+
+        s_supplyOfEachType[s_nftTypes[randomIndex]] -= 1;
+
         // Call NFT Opening Item to open box
         s_nftOpeningItem.mintFromBoxOpening(
             msg.sender,
@@ -250,7 +237,7 @@ contract InZBoxCampaign is
 
         // Save state
         isOpened[boxId] = true;
-        emit OpenBox(msg.sender, boxId);
+        emit OpenBox(msg.sender, boxId, s_nftTypes[randomIndex]);
     }
 
     /**

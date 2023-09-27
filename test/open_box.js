@@ -14,9 +14,11 @@ const privateKey = fs.readFileSync(".private_key").toString().trim();
 
 contract("BoxCollection", function (accounts) {
   it("create box", async function () {
-    var _erc1155RandomCollection = await ERC1155RandomCollection.at(process.env.ERC1155RandomCollection);
+    var _erc1155RandomCollection = await ERC1155RandomCollection.at(
+      process.env.ERC1155RandomCollection
+    );
     var _boxCollection = await BoxCollection.at(process.env.BoxCollection);
-    console.log("account: ", accounts)
+    console.log("account: ", accounts);
 
     // const value = BigNumber.from('1000000000000000000'); // 10**18
 
@@ -26,24 +28,26 @@ contract("BoxCollection", function (accounts) {
     //   .sendTransaction(process.env.RECEIVER, value, { from: accounts[0], value: value }))
 
     // create box
-    await _boxCollection.mintBox(process.env.RECEIVER)
-    console.log("Latest box id: ", await _boxCollection.getCurrentBoxId())
+    await _boxCollection.mintBox(process.env.RECEIVER);
+    console.log("Latest box id: ", await _boxCollection.getCurrentBoxId());
 
     return assert.isTrue(true);
   });
 
   it("open box", async function () {
-    var _erc1155RandomCollection = await ERC1155RandomCollection.at(process.env.ERC1155RandomCollection);
+    var _erc1155RandomCollection = await ERC1155RandomCollection.at(
+      process.env.ERC1155RandomCollection
+    );
     var _boxCollection = await BoxCollection.at(process.env.BoxCollection);
 
-    await _boxCollection.openBox(2)
-    console.log("Open success")
+    await _boxCollection.openBox(2);
+    console.log("Open success");
 
     var latestId = await _erc1155RandomCollection.getCurrentId();
-    console.log("Latest Nft Type: ", latestId.toString())
+    console.log("Latest Nft Type: ", latestId.toString());
 
     var type = await _erc1155RandomCollection.getNftType(2);
-    console.log("type: ", type.toString())
+    console.log("type: ", type.toString());
 
     return assert.isTrue(true);
   });
