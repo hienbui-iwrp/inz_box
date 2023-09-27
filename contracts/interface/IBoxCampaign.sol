@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 interface IBoxCampaign {
     struct Proof {
@@ -7,11 +7,7 @@ interface IBoxCampaign {
         bytes32 s;
     }
 
-    function mintBox(
-        address _to,
-        uint256 price,
-        Proof memory _proof
-    ) external payable;
+    function mintBox() external payable;
 
-    function openBox(uint256 boxId) external;
+    function openBox() external;
 }
