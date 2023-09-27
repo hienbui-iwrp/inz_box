@@ -5,9 +5,9 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 import "./interface/IBoxCampaign.sol";
-import "./interface/ICampaignTypeNFT721.sol";
+import "./interface/IBoxItemCampaignNFT721.sol";
 
-contract InzBoxCampaign is IBoxCampaign, ERC721Upgradeable {
+contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
     event MintBox(address _to, uint256 _tokenId, uint256 _price);
     event SetCampaign721(address _old, address _new);
     ///
@@ -139,7 +139,11 @@ contract InzBoxCampaign is IBoxCampaign, ERC721Upgradeable {
         uint8 nftType = getRandomType();
         amountOfEachType[nftType]--;
         isOpened[_boxId] = true;
-        ICampaignTypeNFT721(campaignTypeNFT721).mintFromBox();
+        IBoxItemCampaignNFT721(campaignTypeNFT721).mintFromBox(
+            _boxId,
+            _ownerOf(_boxId),
+            nftType
+        );
     }
 
     /// @notice get type of item when open box
