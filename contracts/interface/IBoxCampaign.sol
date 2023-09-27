@@ -7,7 +7,11 @@ interface IBoxCampaign {
         bytes32 s;
     }
 
-    function mintBox(address _to, Proof memory _proof) external;
+    function mintBox(
+        address _to,
+        uint256 price,
+        Proof memory _proof
+    ) external payable;
 
     function openBox(uint256 boxId) external;
 }

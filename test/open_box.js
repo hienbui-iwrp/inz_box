@@ -1,8 +1,10 @@
-var InzCampaignTypesNFT1155 = artifacts.require("InzCampaignTypesNFT1155");
-var BoxCampaign = artifacts.require("BoxCampaign");
 const fs = require("fs");
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const { BigNumber } = require("@ethersproject/bignumber");
+
+var InzCampaignBoxFactory = artifacts.require("InzCampaignBoxFactory");
+var InzCampaignTypesNFT1155 = artifacts.require("InzCampaignTypesNFT1155");
+var InzBoxCampaign = artifacts.require("InzBoxCampaign");
 /*
  * uncomment accounts to access the test accounts made available by the
  * Ethereum client

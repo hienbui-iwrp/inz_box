@@ -1,8 +1,9 @@
 const web3 = require('web3')
 const fs = require("fs");
 
+var InzCampaignBoxFactory = artifacts.require("InzCampaignBoxFactory");
 var InzCampaignTypesNFT1155 = artifacts.require("InzCampaignTypesNFT1155");
-var BoxCampaign = artifacts.require("BoxCampaign");
+var InzBoxCampaign = artifacts.require("InzBoxCampaign");
 
 /*
  * uncomment accounts to access the test accounts made available by the
