@@ -40,6 +40,9 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
     // price of each box
     uint256 private price;
 
+    // OPTION: Fixed, auto-increase tokenId or not
+    bool isAutoIncreasedId;
+
     // Duration of the campaign
     uint256 private campaignStartTime;
     uint256 private campaignEndTime;
@@ -53,25 +56,26 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
     /// @param _tokenUri uri of NFT box
     /// @param _campaignTypeNFT721 address of items collection
     /// @param _nftTypes list type available of NFT items
-    /// @param _amountOfEachType supply for each NFT type follow to _nftTypes
+    /// @param _amountOfEachNFTType supply for each NFT type follow to _nftTypes
     /// @param _price price of each mint acton
     /// @param _startTime start time of campaign can make mint
     /// @param _endTime end time of campaign can make mint
     function initialize(
+        address _campaignTypeNFT721,
+        string memory _tokenUri,
+        IERC20 _payToken,
         string memory _name,
         string memory _symbol,
-        address _feeAddress,
-        address _payToken,
-        string memory _tokenUri,
-        address _campaignTypeNFT721,
-        uint8[] memory _nftTypes,
-        uint256[] memory _amountOfEachType,
-        uint256 _price,
         uint256 _startTime,
-        uint256 _endTime
+        uint256 _endTime,
+        bool _isAutoIncreaseId,
+        uint256 _price,
+        address _feeAddress,
+        uint8[] memory _nftTypes,
+        uint256[] memory _amountOfEachNFTType
     ) public {
         require(
-            _nftTypes.length == _amountOfEachType.length,
+            _nftTypes.length == _amountOfEachNFTType.length,
             "Not enough supply for each type"
         );
         __ERC721_init(_name, _symbol);
@@ -80,12 +84,14 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
         tokenUri = _tokenUri;
         campaignTypeNFT721 = _campaignTypeNFT721;
         nftTypes = _nftTypes;
+        isAutoIncreasedId = _isAutoIncreaseId;
 
         totalMinted = 0;
+        // calculate by sum all amount of nft type
         totalSupply = 0;
-        for (uint i = 0; i < _amountOfEachType.length; i++) {
-            amountOfEachType[_nftTypes[i]] = _amountOfEachType[i];
-            totalSupply += _amountOfEachType[i];
+        for (uint i = 0; i < _amountOfEachNFTType.length; i++) {
+            amountOfEachType[_nftTypes[i]] = _amountOfEachNFTType[i];
+            totalSupply += _amountOfEachNFTType[i];
         }
 
         price = _price;
