@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 interface IBoxCampaign {
     struct Proof {
         uint8 v;
-        bytes32 r1;
+        bytes32 r;
         bytes32 s;
     }
 

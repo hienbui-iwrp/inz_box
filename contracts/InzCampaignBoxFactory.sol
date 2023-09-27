@@ -5,9 +5,13 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-contract InZCampaignBoxFactory {
+import "./interface/ICampaignBoxFactory.sol";
+
+contract InZCampaignBoxFactory is ICampaignBoxFactory {
     // address of the contract implement box logic
     address private boxImplementation;
     // box campaign have been cloned by factory
     address[] private boxCampaigns;
+
+    function createCampaign() external {}
 }
