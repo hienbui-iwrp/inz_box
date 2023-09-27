@@ -150,7 +150,7 @@ contract InzCampaignTypesNFT721 is
     /**
      * @dev                  Address in whitelist Mint tokens for id defined (first buy on market)
      * @param _to            Address receive NFT
-     * @param _tokenType     Type of token to mint - if tokenType is 0
+     * @param _tokenType     Type of token to mint
      */
     function mintFromBoxOpening(
         address _to,

@@ -2,7 +2,14 @@
 pragma solidity ^0.8.0;
 
 interface IBoxCampaign {
-    function mintBox(address _to) external;
+    /// @notice Mint a mystery box to the user
+    /// @dev Mint directly to whoever call this contract
+    function mintBox() external;
 
-    function openBox(address to, uint256 boxId) external;
+    /// @notice Mint a mystery box to the user with id specified by the user
+    /// @dev Mint directly to whoever call this contract
+    /// @param _tokenId ID of the box that will be minted
+    function mintBoxWithSpecifiedID(uint256 _tokenId) external;
+
+    function openBox(uint256 boxId) external;
 }

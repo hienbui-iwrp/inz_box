@@ -68,6 +68,7 @@ contract InZCampaignBoxFactory is AccessControl {
      * @param _nftType  the nft type can be opened in box
      */
     function createBox(
+        address _nftCampaign,
         string memory _boxUri,
         IERC20 _payToken,
         string memory _name,
@@ -77,10 +78,13 @@ contract InZCampaignBoxFactory is AccessControl {
         bool _isAutoIncreaseId,
         uint256 _totalSupply,
         uint256 _price,
-        uint8[] memory _nftType
+        uint8[] memory _nftType,
+        uint256[] memory _amountOfEachNFTType
     ) external onlyRole(ADMIN_ROLE) {
         address clone = Clones.clone(boxImplementationAddress);
+
         InZBoxCampaign(clone).initialize(
+            _nftCampaign,
             _boxUri,
             _payToken,
             _name,
@@ -90,8 +94,10 @@ contract InZCampaignBoxFactory is AccessControl {
             _isAutoIncreaseId,
             _totalSupply,
             _price,
-            _nftType
+            _nftType,
+            _amountOfEachNFTType
         );
+
         inZBoxCampaignsAddress.push(address(clone));
         emit NewBox(
             address(clone),
