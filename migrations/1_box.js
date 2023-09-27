@@ -3,9 +3,9 @@ const fs = require("fs");
 
 // command line run: truffle migrate --f 1 --to 1 --network base_goerli -reset --compile-none
 
-var InzCampaignBoxFactory = artifacts.require("InzCampaignBoxFactory");
-var InzCampaignTypesNFT1155 = artifacts.require("InzCampaignTypesNFT1155");
-var InzBoxCampaign = artifacts.require("InzBoxCampaign");
+var InZBoxCampaign = artifacts.require("InZBoxCampaign");
+var InZBoxItemCampaignNFT721 = artifacts.require("InZBoxItemCampaignNFT721");
+var InZCampaignBoxFactory = artifacts.require("InZCampaignBoxFactory");
 
 function wf(name, address) {
     fs.appendFileSync("_address.txt", name + "=" + address);
@@ -13,10 +13,10 @@ function wf(name, address) {
 }
 
 const deployments = {
-    campaignTypesNFT1155: true,
+    boxItemCampaignNFT721: true,
     boxCampaign: true,
-    boxFactory: true,
-    configItemCampaign: true,
+    campaignBoxFactory: true,
+    config: true,
 };
 
 module.exports = async function (deployer, network, accounts) {
@@ -31,46 +31,38 @@ module.exports = async function (deployer, network, accounts) {
     var supplies = [5, 4, 3, 2, 1]
 
     /**
-     *      0.1.    Deploy ERC1155RandomCollection
+     *      0.1.    Deploy InZBoxItemCampaignNFT721
      */
-    if (deployments.campaignTypesNFT1155) {
-        await deployer.deploy(InzCampaignTypesNFT1155, nullAddress, types, uri);
-        var _inzCampaignTypesNFT1155 = await InzCampaignTypesNFT1155.deployed();
-        wf("InzCampaignTypesNFT1155", _inzCampaignTypesNFT1155.address);
+    if (deployments.boxItemCampaignNFT721) {
+        await deployer.deploy(InZBoxItemCampaignNFT721);
+        var _boxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.deployed();
+        wf("InZBoxItemCampaignNFT721", _boxItemCampaignNFT721.address);
     } else {
-        var _inzCampaignTypesNFT1155 = await InzCampaignTypesNFT1155.at(
-            process.env.ERC1155RandomCollection
+        var _boxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(
+            process.env.InZBoxItemCampaignNFT721
         );
     }
 
     /**
-     *      0.2.    Deploy BoxCollection
+     *      0.2.    Deploy InZBoxCampaign
      */
     if (deployments.boxCampaign) {
-        await deployer.deploy(InzBoxCampaign, _inzCampaignTypesNFT1155.address, types, supplies,
-            process.env.SIGNER);
-        var _boxCampaign = await InzBoxCampaign.deployed();
-        wf("InzBoxCampaign", _boxCampaign.address);
+        await deployer.deploy(InZBoxCampaign);
+        var _boxCampaign = await InZBoxCampaign.deployed();
+        wf("InZBoxCampaign", _boxCampaign.address);
     } else {
-        var _boxCampaign = await InzBoxCampaign.at(process.env.BoxCollection);
+        var _boxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaign);
     }
 
     /**
-    *      0.3.    config Item Collection
+    *      0.3.    Deploy InZCampaignBoxFactory
     */
-    if (deployments.boxFactory) {
-        await deployer.deploy(InzCampaignBoxFactory, _boxCampaign.address);
-        var _boxFactory = await InzCampaignBoxFactory.deployed();
-        wf("InzCampaignBoxFactory", _boxCampaign.address);
+    if (deployments.campaignBoxFactory) {
+        await deployer.deploy(InZCampaignBoxFactory, _boxCampaign.address);
+        var _campaignBoxFactory = await InZCampaignBoxFactory.deployed();
+        wf("InZCampaignBoxFactory", _campaignBoxFactory.address);
     } else {
-        var _boxFactory = await InzCampaignBoxFactory.at(process.env.BoxCollection);
+        var _campaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory);
     }
 
-    /**
-    *      0.4.    config Item Collection
-    */
-    if (deployments.configItemCampaign) {
-        await _inzCampaignTypesNFT1155.setBoxAddress(_boxCampaign.address)
-        console.log("update box address succesfully")
-    }
 }

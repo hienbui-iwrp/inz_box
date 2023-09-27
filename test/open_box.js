@@ -2,9 +2,9 @@ const fs = require("fs");
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const { BigNumber } = require("@ethersproject/bignumber");
 
-var InzCampaignBoxFactory = artifacts.require("InzCampaignBoxFactory");
-var InzCampaignTypesNFT1155 = artifacts.require("InzCampaignTypesNFT1155");
-var InzBoxCampaign = artifacts.require("InzBoxCampaign");
+var InZBoxCampaign = artifacts.require("InZBoxCampaign");
+var InZBoxItemCampaignNFT721 = artifacts.require("InZBoxItemCampaignNFT721");
+var InZCampaignBoxFactory = artifacts.require("InZCampaignBoxFactory");
 /*
  * uncomment accounts to access the test accounts made available by the
  * Ethereum client

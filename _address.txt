@@ -1,11 +1,19 @@
+-- command
+start local environment: truffle develop
+compile: truffle compile
+deploy: truffle migrate --compile-none
+test: truffle test ./test/test.js --compile-none --migrate-none
+
+--address
 ERC1155RandomCollection=0x3106b5111c14Cb8f17F728A54Df3212b9A6F7f0e
 BoxCollection=0xc22C6Ec93A6eAB25b190A740076D440172855917
 
 
 --local
 
-ERC1155RandomCollection=0xd3d80a04F815EA1592B2454ed694c133C2Afe251
-BoxCollection=0x8665aB667808C265989158eef4a8f70F05c0c0BA
-InzCampaignTypesNFT1155=0x88dd08829b93c0a715Ff986fDA412Efb4A38F22e
-InzBoxCampaign=0x468E2c7892B580996191Ede98Da02Aa7c6C51Db6
-InzCampaignBoxFactory=0x468E2c7892B580996191Ede98Da02Aa7c6C51Db6
+InZBoxItemCampaignNFT721=0x69e517817aED533B0442B4ea27BC309Dc4DFCeDD
+InZBoxCampaign=0x9A932a19D00e96cC21633Ca307150C5b72602ba5
+InZCampaignBoxFactory=0x6EDe2Ce685194b4c8Bb8FC854064bd49ed922e9d
+-after config
+InZBoxCampaign=0x3310b024683E6B0BFA74362f90c9b74CCbA58981 
+

@@ -49,54 +49,60 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
 
     /// @notice Initialize new box campaign
     /// @dev Initialize new box campaign
+    /// @param _feeAddress address received fee pay to mint
+    /// @param _tokenUri uri of NFT box
+    /// @param _payToken currency of transaction
     /// @param _name name of NFT box
     /// @param _symbol symbol of NFT box
-    /// @param _feeAddress address received fee pay to mint
-    /// @param _payToken currency of transaction
-    /// @param _tokenUri uri of NFT box
     /// @param _campaignTypeNFT721 address of items collection
-    /// @param _nftTypes list type available of NFT items
-    /// @param _amountOfEachNFTType supply for each NFT type follow to _nftTypes
     /// @param _price price of each mint acton
     /// @param _startTime start time of campaign can make mint
     /// @param _endTime end time of campaign can make mint
     function initialize(
         address _campaignTypeNFT721,
         string memory _tokenUri,
-        IERC20 _payToken,
+        address _payToken,
         string memory _name,
         string memory _symbol,
         uint256 _startTime,
         uint256 _endTime,
         bool _isAutoIncreaseId,
         uint256 _price,
-        address _feeAddress,
-        uint8[] memory _nftTypes,
-        uint256[] memory _amountOfEachNFTType
-    ) public {
-        require(
-            _nftTypes.length == _amountOfEachNFTType.length,
-            "Not enough supply for each type"
-        );
+        address _feeAddress
+    ) public initializer {
         __ERC721_init(_name, _symbol);
         feeAddress = _feeAddress;
         payToken = IERC20(_payToken);
         tokenUri = _tokenUri;
         campaignTypeNFT721 = _campaignTypeNFT721;
-        nftTypes = _nftTypes;
         isAutoIncreasedId = _isAutoIncreaseId;
 
         totalMinted = 0;
         // calculate by sum all amount of nft type
         totalSupply = 0;
-        for (uint i = 0; i < _amountOfEachNFTType.length; i++) {
-            amountOfEachType[_nftTypes[i]] = _amountOfEachNFTType[i];
-            totalSupply += _amountOfEachNFTType[i];
-        }
 
         price = _price;
         campaignStartTime = _startTime;
         campaignEndTime = _endTime;
+    }
+
+    /// @notice Initialize type for new box campaign
+    /// @dev Initialize type for new box campaign
+    /// @param _nftTypes list type available of NFT items
+    /// @param _amountOfEachNFTType supply for each NFT type follow to _nftTypes
+    function initializeAmountForEachType(
+        uint8[] calldata _nftTypes,
+        uint256[] calldata _amountOfEachNFTType
+    ) public {
+        require(
+            _nftTypes.length == _amountOfEachNFTType.length,
+            "Not enough supply for each type"
+        );
+        nftTypes = _nftTypes;
+        for (uint i = 0; i < _amountOfEachNFTType.length; i++) {
+            amountOfEachType[_nftTypes[i]] = _amountOfEachNFTType[i];
+            totalSupply += _amountOfEachNFTType[i];
+        }
     }
 
     function setCampaign721(address _campaignTypeNFT721) public {
@@ -107,8 +113,8 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
 
     /// @notice buy a box
     /// @dev mint a NFT box to an address
-    /// @param _to address is used to owner new NFT box
-    function mintBox(address _to) external payable {
+    /// @param _tokenId token id need to mint when auto increase if off
+    function mintBox(uint256 _tokenId) external payable {
         require(true, "Not enough supply for");
         require(
             campaignStartTime <= block.timestamp,
@@ -128,13 +134,20 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
         }
 
         uint id = Counters.current(tokenIdCounter);
-        _mint(_to, id);
+        if (!isAutoIncreasedId) {
+            require(!_exists(_tokenId), "Mint Box: tokenId's already existed");
+            id = _tokenId;
+        }
+        _mint(msg.sender, id);
         isOpened[id] = false;
         totalMinted++;
-        ownerBoxes[_to].push(id);
-        Counters.increment(tokenIdCounter);
+        ownerBoxes[msg.sender].push(id);
 
-        emit MintBox(_to, id, price);
+        if (isAutoIncreasedId) {
+            Counters.increment(tokenIdCounter);
+        }
+
+        emit MintBox(msg.sender, id, price);
     }
 
     /// @notice open a box bought
