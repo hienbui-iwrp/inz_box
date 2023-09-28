@@ -9,8 +9,20 @@ import "./interface/ICampaignBoxFactory.sol";
 import "./InZBoxCampaign.sol";
 import "./InZBoxItemCampaignNFT721.sol";
 
-contract InZCampaignBoxFactory is ICampaignBoxFactory {
-    // EVENT
+contract InZCampaignBoxFactory is ICampaignBoxFactory, AccessControl {
+    ///
+    ///         Event Definitions
+    ///
+
+    /// @param newBoxAddress Address of new box campaign created
+    /// @param uri uri of new box campaign
+    /// @param payToken paytoken use for minting
+    /// @param name name of new box campaign
+    /// @param symbol symbol of new box campaign
+    /// @param startTime start time can mint
+    /// @param endTime end time can mint
+    /// @param price price used for minting
+    /// @param feeAddress wallet receive platform fee
     event NewBox(
         address newBoxAddress,
         string uri,
@@ -19,67 +31,66 @@ contract InZCampaignBoxFactory is ICampaignBoxFactory {
         string symbol,
         uint256 startTime,
         uint256 endTime,
-        bool isAutoIncreaseId,
         uint256 price,
         address feeAddress
     );
 
-    event CreateBoxItemCampaign(
-        string name,
-        string symbol,
+    /// @param boxAddress Address of box configurated
+    /// @param nftTypes list valid type of item
+    /// @param amountOfEachNFTType supply of each type
+    event SetSupplyEachType(
         address boxAddress,
         uint8[] nftTypes,
-        string[] uri,
-        uint256[] amountOfEachNFTType,
-        address boxItemAddress
+        uint256[] amountOfEachNFTType
     );
+
+    /**
+     *          Storage data declarations
+     */
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     // address of the contract implement box logic
     address private boxImplementation;
     // box campaign have been cloned by factory
     address[] private boxCampaigns;
 
-    // address of the contract implement box item collection
-    address private boxItemImplementation;
-
-    // address box item of each box campaign
-    mapping(address => address) boxItemAddress;
-
-    constructor(address _boxImplementation, address _boxItemImplementation) {
+    constructor(address _boxImplementation) {
         boxImplementation = _boxImplementation;
-        boxItemImplementation = _boxItemImplementation;
+
+        _setupRole(ADMIN_ROLE, tx.origin);
+        _setupRole(DEFAULT_ADMIN_ROLE, tx.origin);
     }
 
     /// @notice Create new box campaign
+    /// @param _itemCampaign _itemCampaign
     /// @param _tokenUri uri of NFT box
     /// @param _payToken currency of transaction
     /// @param _name name of NFT box
     /// @param _symbol symbol of NFT box
     /// @param _startTime start time of campaign can make mint
     /// @param _endTime end time of campaign can make mint
-    /// @param _isAutoIncreaseId is creator want box id auto increase
     /// @param _price price of each mint acton
     /// @param _feeAddress address received fee pay to mint
     function createBox(
+        address _itemCampaign,
         string memory _tokenUri,
         address _payToken,
         string memory _name,
         string memory _symbol,
         uint256 _startTime,
         uint256 _endTime,
-        bool _isAutoIncreaseId,
         uint256 _price,
         address _feeAddress
-    ) external {
+    ) external onlyRole(ADMIN_ROLE) {
         address clone = Clones.clone(boxImplementation);
         InZBoxCampaign(clone).initialize(
+            _itemCampaign,
             _tokenUri,
             _payToken,
             _name,
             _symbol,
             _startTime,
             _endTime,
-            _isAutoIncreaseId,
             _price,
             _feeAddress
         );
@@ -93,64 +104,30 @@ contract InZCampaignBoxFactory is ICampaignBoxFactory {
             _symbol,
             _startTime,
             _endTime,
-            _isAutoIncreaseId,
             _price,
             _feeAddress
         );
     }
 
     /// @notice create new Box item campaign
-    /// @param _name name of NFT box
-    /// @param _symbol symbol of NFT box
     /// @param _nftTypes list type available of NFT items
-    /// @param _uri uri for each type
     /// @param _amountOfEachNFTType supply for each NFT type follow to _nftTypes
     /// @param _boxCampaign address of box campaign own
-    function createBoxItem(
-        string memory _name,
-        string memory _symbol,
+    function configTypeInCampaign(
         uint8[] memory _nftTypes,
-        string[] memory _uri,
         uint256[] memory _amountOfEachNFTType,
         address _boxCampaign
-    ) external {
-        address clone = Clones.clone(boxItemImplementation);
-        InZBoxItemCampaignNFT721(clone).initialize(
-            _name,
-            _symbol,
-            _nftTypes,
-            _uri,
-            _boxCampaign
-        );
-
-        InZBoxCampaign(_boxCampaign).initializeAmountForEachType(
+    ) external onlyRole(ADMIN_ROLE) {
+        InZBoxCampaign(_boxCampaign).setAmountForEachType(
             _nftTypes,
             _amountOfEachNFTType
         );
 
-        InZBoxCampaign(_boxCampaign).setItemCampaign721(clone);
-        boxItemAddress[_boxCampaign] = clone;
-        emit CreateBoxItemCampaign(
-            _name,
-            _symbol,
-            _boxCampaign,
-            _nftTypes,
-            _uri,
-            _amountOfEachNFTType,
-            clone
-        );
+        emit SetSupplyEachType(_boxCampaign, _nftTypes, _amountOfEachNFTType);
     }
 
     /// @notice get all address of box campaign created
     function getListBoxCampaign() public view returns (address[] memory) {
         return boxCampaigns;
-    }
-
-    /// @notice get address of box item campaign by box campaign
-    /// @param _boxCampaign address of box campaign own
-    function getBoxItemCampaign(
-        address _boxCampaign
-    ) public view returns (address) {
-        return boxItemAddress[_boxCampaign];
     }
 }

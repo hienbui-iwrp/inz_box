@@ -9,8 +9,7 @@ interface IBoxCampaign {
 
     /// @notice buy a box
     /// @dev mint a NFT box to an address
-    /// @param _tokenId token id need to mint when auto increase if off
-    function mintBox(uint256 _tokenId) external payable;
+    function mintBox() external payable;
 
     /// @notice open a box bought
     /// @dev mint a NFT item when open a box

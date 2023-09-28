@@ -16,7 +16,6 @@ const deployments = {
     boxItemCampaignNFT721: true,
     boxCampaign: true,
     campaignBoxFactory: true,
-    config: true,
 };
 
 module.exports = async function (deployer, network, accounts) {
@@ -28,14 +27,20 @@ module.exports = async function (deployer, network, accounts) {
     var types = [1, 2, 3, 4, 5]
     var uri = ["/1", "/2", "/3", "/4", "/5"]
     var nullAddress = "0x0000000000000000000000000000000000000000"
-    var supplies = [5, 4, 3, 2, 1]
 
     /**
      *      0.1.    Deploy InZBoxItemCampaignNFT721
      */
     if (deployments.boxItemCampaignNFT721) {
         await deployer.deploy(InZBoxItemCampaignNFT721);
+
         var _boxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.deployed();
+
+        await _boxItemCampaignNFT721.initialize("BOX ITEM",
+            "BI",
+            types,
+            uri,
+            nullAddress)
         wf("InZBoxItemCampaignNFT721", _boxItemCampaignNFT721.address);
     } else {
         var _boxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(
@@ -58,11 +63,12 @@ module.exports = async function (deployer, network, accounts) {
     *      0.3.    Deploy InZCampaignBoxFactory
     */
     if (deployments.campaignBoxFactory) {
-        await deployer.deploy(InZCampaignBoxFactory, _boxCampaign.address, _boxItemCampaignNFT721.address);
+        await deployer.deploy(InZCampaignBoxFactory, _boxCampaign.address);
         var _campaignBoxFactory = await InZCampaignBoxFactory.deployed();
         wf("InZCampaignBoxFactory", _campaignBoxFactory.address);
     } else {
         var _campaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory);
     }
+
 
 }

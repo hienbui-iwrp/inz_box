@@ -1,24 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./interface/IBoxItemCampaignNFT721.sol";
 
-contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
+contract InZBoxItemCampaignNFT721 is
+    ERC721Upgradeable,
+    IBoxItemCampaignNFT721,
+    AccessControlUpgradeable
+{
     using Counters for Counters.Counter;
-    // EVENT DEFINITION
-    event MintFromBox(
-        address _to,
-        uint256 _fromBox,
-        uint256 _tokenId,
-        uint8 _tokenType
-    );
+    ///
+    ///         EVENT DEFINITION
+    ///
+
+    /// @param _to Owner of box NFT
+    /// @param _tokenId token id of box
+    /// @param _tokenType token id of box
+    event MintFromBox(address _to, uint256 _tokenId, uint8 _tokenType);
+
+    ///
+    ///             STORAGE DATA DECLARATIONS
+    ///
+
+    bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     // LOCAL VARIABLE
     // Address of box campaign
@@ -29,9 +37,6 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
 
     // Uri by type, each type corresponding to uri
     mapping(uint8 => string) private typeToUri;
-
-    // Token id is is opened by which box id (token id => box id)
-    mapping(uint256 => uint256) private fromBoxId;
 
     // Mapping token's holder address to tokenIds list
     mapping(address => uint256[]) private holders;
@@ -45,25 +50,26 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
         _;
     }
 
-    /**
-     *          Contract Initialization
-     */
+    /// @notice initialize
+    /// @dev initialize
+    /// @param _name Name of NFT
+    /// @param _symbol Symbol of NFT
+    /// @param _nftTypes List type of nft to mint
+    /// @param _uri Uri of each type
+    /// @param _boxCampaign Address of box campaign can mint
     function initialize(
-        string memory _symbol,
         string memory _name,
+        string memory _symbol,
         uint8[] memory _nftTypes,
         string[] memory _uri,
         address _boxCampaign
-    ) external initializer {
+    ) public initializer {
         require(
             _nftTypes.length == _uri.length,
             "NFT type and uri are not match"
         );
 
         __ERC721_init(_name, _symbol);
-        // __AccessControl_init();
-        // __UUPSUpgradeable_init();
-        // _transferOwnership(_adminAddress);
 
         nftTypes = _nftTypes;
 
@@ -74,22 +80,26 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
 
         boxCampaign = _boxCampaign;
 
-        // _setupRole(ADMIN_ROLE, _adminAddress);
-        // _setupRole(DEFAULT_ADMIN_ROLE, _adminAddress);
-        // _setupRole(DESIGN_ROLE, _adminAddress);
-        // _setupRole(BURNER_ROLE, _adminAddress);
+        __AccessControl_init();
+
+        _setupRole(DEFAULT_ADMIN_ROLE, tx.origin);
+        _setupRole(ADMIN_ROLE, tx.origin);
+    }
+
+    /// @notice Update new address box campaign can mint
+    /// @param _boxCampaign address new box campaign
+    function setBoxCampaign(address _boxCampaign) public onlyRole(ADMIN_ROLE) {
+        boxCampaign = _boxCampaign;
     }
 
     /// @notice Mint nft from box
     /// @dev Only box campaign can call this function
-    /// @param _boxId id of the box
     /// @param _to Address of user receive nft
     /// @param _tokenType Type of nft to mint
     function mintFromBox(
-        uint256 _boxId,
         address _to,
         uint8 _tokenType
-    ) external {
+    ) external onlyFromBoxCampaign {
         // Check token type is exist in this campaign
         require(isNFTTypeExist(_tokenType), "Token type does not exist");
 
@@ -99,9 +109,8 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
 
         // save token information to contract
         holders[_to].push(_id);
-        fromBoxId[_id] = _boxId;
 
-        emit MintFromBox(_to, _boxId, _id, _tokenType);
+        emit MintFromBox(_to, _id, _tokenType);
     }
 
     // GETTERS
@@ -117,7 +126,21 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
         return false;
     }
 
+    /// @notice Get current box campaign
+    /// @return address of current campaign
     function getBoxCampaign() public view returns (address) {
         return boxCampaign;
+    }
+
+    /// @notice supportsInterface from AccessControlUpgradeable
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        override(ERC721Upgradeable, AccessControlUpgradeable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
