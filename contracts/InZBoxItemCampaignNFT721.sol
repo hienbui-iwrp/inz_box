@@ -56,7 +56,7 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
     ) external initializer {
         require(
             _nftTypes.length == _uri.length,
-            "NFT type and uri is not match"
+            "NFT type and uri are not match"
         );
 
         __ERC721_init(_name, _symbol);

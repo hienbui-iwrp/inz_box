@@ -58,7 +58,7 @@ module.exports = async function (deployer, network, accounts) {
     *      0.3.    Deploy InZCampaignBoxFactory
     */
     if (deployments.campaignBoxFactory) {
-        await deployer.deploy(InZCampaignBoxFactory, _boxCampaign.address);
+        await deployer.deploy(InZCampaignBoxFactory, _boxCampaign.address, _boxItemCampaignNFT721.address);
         var _campaignBoxFactory = await InZCampaignBoxFactory.deployed();
         wf("InZCampaignBoxFactory", _campaignBoxFactory.address);
     } else {

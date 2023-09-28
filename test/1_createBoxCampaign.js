@@ -21,7 +21,9 @@ contract("BoxFactory", async function (accounts) {
         const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
 
         const types = [1, 2, 3, 4, 5]
+        const uri = ["1", "2", "3", "4", "5"]
         const amounts = [10, 20, 30, 40, 50]
+
 
         const createBoxLog = await inZCampaignBoxFactory.createBox(
             inZBoxItemCampaignNFT721.address,
@@ -36,29 +38,21 @@ contract("BoxFactory", async function (accounts) {
             process.env.RECEIVER
         )
 
-        const boxCampaignClone = await createBoxLog.logs[0].args[0]
+        console.log("clone campaign log: ", createBoxLog)
+        console.log("clone campaign arg: ", createBoxLog.logs[0].args)
 
-        const configBoxCampaign = await inZCampaignBoxFactory.configBoxCampaign(
-            boxCampaignClone,
+        const cloneBoxCampaign = createBoxLog.logs[0].args[0]
+
+        const createBoxItemLog = await inZCampaignBoxFactory.createBoxItem(
+            "ABC",
+            "ABC",
             types,
-            amounts
+            uri,
+            amounts,
+            cloneBoxCampaign
         )
-
-        console.log("clone campaign: ", configBoxCampaign.logs[0].args[0])
-        return assert.isTrue(true);
-    });
-
-    it("mint box", async function () {
-        const inZBoxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaign)
-        const inZBoxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(process.env.InZBoxItemCampaignNFT721)
-        const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
-
-        const mintLog = await inZBoxCampaign.mintBox(0);
-
-        console.log("mintLog: ", mintLog)
-        console.log("mintLog args: ", mintLog.logs[0].args)
-
-
+        console.log("clone item campaign log: ", createBoxItemLog)
+        console.log("clone item campaign arg: ", createBoxItemLog.logs[0].args)
         return assert.isTrue(true);
     });
 

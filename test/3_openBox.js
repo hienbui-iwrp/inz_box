@@ -22,11 +22,10 @@ contract("BoxCampaign", function (accounts) {
         const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
 
 
-        await inZBoxItemCampaignNFT721.initialize("NFT", "N", inZBoxCampaign.address)
-        const mintLog = await inZBoxCampaign.openBox(0);
+        const openLog = await inZBoxCampaign.openBox(0);
 
-        console.log("mintLog: ", mintLog)
-        console.log("mintLog args: ", mintLog.logs[0].args)
+        console.log("openLog: ", mintLog)
+        console.log("openLog args: ", mintLog.logs[0].args)
 
 
         return assert.isTrue(true);

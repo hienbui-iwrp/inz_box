@@ -47,22 +47,20 @@ contract InZCampaignBoxFactory {
 
     constructor(address _boxImplementation, address _boxItemImplementation) {
         boxImplementation = _boxImplementation;
-        boxImplementation = _boxItemImplementation;
+        boxItemImplementation = _boxItemImplementation;
     }
 
-    // /// @notice Create new box campaign
-    // /// @param _campaignTypeNFT721 address of items collection
-    // /// @param _tokenUri uri of NFT box
-    // /// @param _payToken currency of transaction
-    // /// @param _name name of NFT box
-    // /// @param _symbol symbol of NFT box
-    // /// @param _startTime start time of campaign can make mint
-    // /// @param _endTime end time of campaign can make mint
-    // /// @param _isAutoIncreaseId is creator want box id auto increase
-    // /// @param _price price of each mint acton
-    // /// @param _feeAddress address received fee pay to mint
-    // /// @param _nftTypes list type available of NFT items
-    // /// @param _amountOfEachNFTType supply for each NFT type follow to _nftTypes
+    /// @notice Create new box campaign
+    /// @param _campaignTypeNFT721 address of items collection
+    /// @param _tokenUri uri of NFT box
+    /// @param _payToken currency of transaction
+    /// @param _name name of NFT box
+    /// @param _symbol symbol of NFT box
+    /// @param _startTime start time of campaign can make mint
+    /// @param _endTime end time of campaign can make mint
+    /// @param _isAutoIncreaseId is creator want box id auto increase
+    /// @param _price price of each mint acton
+    /// @param _feeAddress address received fee pay to mint
     function createBox(
         address _campaignTypeNFT721,
         string memory _tokenUri,
@@ -105,13 +103,13 @@ contract InZCampaignBoxFactory {
         return address(clone);
     }
 
-    // /// @notice create new Box item campaign
-    // /// @param _name name of NFT box
-    // /// @param _symbol symbol of NFT box
-    // /// @param _nftTypes list type available of NFT items
-    // /// @param _uri uri for each type
-    // /// @param _amountOfEachNFTType supply for each NFT type follow to _nftTypes
-    // /// @param _boxCampaign address of box campaign own
+    /// @notice create new Box item campaign
+    /// @param _name name of NFT box
+    /// @param _symbol symbol of NFT box
+    /// @param _nftTypes list type available of NFT items
+    /// @param _uri uri for each type
+    /// @param _amountOfEachNFTType supply for each NFT type follow to _nftTypes
+    /// @param _boxCampaign address of box campaign own
     function createBoxItem(
         string memory _name,
         string memory _symbol,
@@ -146,14 +144,13 @@ contract InZCampaignBoxFactory {
         return address(clone);
     }
 
-    // /// @notice get all address of box campaign created
-    // /// @param _boxCampaign address of box campaign own
+    /// @notice get all address of box campaign created
     function getListBoxCampaign() public view returns (address[] memory) {
         return boxCampaigns;
     }
 
-    // /// @notice get address of box item campaign by box campaign
-    // /// @param _boxCampaign address of box campaign own
+    /// @notice get address of box item campaign by box campaign
+    /// @param _boxCampaign address of box campaign own
     function getBoxItemCampaign(
         address _boxCampaign
     ) public view returns (address) {
