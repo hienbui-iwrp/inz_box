@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import "./interface/ICampaignBoxFactory.sol";
 import "./InZBoxCampaign.sol";
+import "./InZBoxItemCampaignNFT721.sol";
 
 contract InZCampaignBoxFactory {
     // EVENT
@@ -23,22 +24,33 @@ contract InZCampaignBoxFactory {
         address feeAddress
     );
 
-    event ConfigBoxCampaign(
+    event CreateBoxItemCampaign(
+        string name,
+        string symbol,
         address boxAddress,
         uint8[] nftTypes,
-        uint256[] amountOfEachNFTType
+        string[] uri,
+        uint256[] amountOfEachNFTType,
+        address boxItemAddress
     );
+
     // address of the contract implement box logic
     address private boxImplementation;
     // box campaign have been cloned by factory
     address[] private boxCampaigns;
 
-    constructor(address _boxImplementation) {
+    // address of the contract implement box item collection
+    address private boxItemImplementation;
+
+    // address box item of each box campaign
+    mapping(address => address) boxItemAddress;
+
+    constructor(address _boxImplementation, address _boxItemImplementation) {
         boxImplementation = _boxImplementation;
+        boxImplementation = _boxItemImplementation;
     }
 
-    // /// @notice Explain to an end user what this does
-    // /// @dev Explain to a developer any extra details
+    // /// @notice Create new box campaign
     // /// @param _campaignTypeNFT721 address of items collection
     // /// @param _tokenUri uri of NFT box
     // /// @param _payToken currency of transaction
@@ -93,19 +105,58 @@ contract InZCampaignBoxFactory {
         return address(clone);
     }
 
-    function configBoxCampaign(
-        address _boxCampaign,
+    // /// @notice create new Box item campaign
+    // /// @param _name name of NFT box
+    // /// @param _symbol symbol of NFT box
+    // /// @param _nftTypes list type available of NFT items
+    // /// @param _uri uri for each type
+    // /// @param _amountOfEachNFTType supply for each NFT type follow to _nftTypes
+    // /// @param _boxCampaign address of box campaign own
+    function createBoxItem(
+        string memory _name,
+        string memory _symbol,
         uint8[] memory _nftTypes,
-        uint256[] memory _amountOfEachNFTType
-    ) public {
+        string[] memory _uri,
+        uint256[] memory _amountOfEachNFTType,
+        address _boxCampaign
+    ) external returns (address) {
+        address clone = Clones.clone(boxItemImplementation);
+        InZBoxItemCampaignNFT721(clone).initialize(
+            _name,
+            _symbol,
+            _nftTypes,
+            _uri,
+            _boxCampaign
+        );
+
         InZBoxCampaign(_boxCampaign).initializeAmountForEachType(
             _nftTypes,
             _amountOfEachNFTType
         );
-        emit ConfigBoxCampaign(
-            address(_boxCampaign),
+        boxItemAddress[_boxCampaign] = clone;
+        emit CreateBoxItemCampaign(
+            _name,
+            _symbol,
+            _boxCampaign,
             _nftTypes,
-            _amountOfEachNFTType
+            _uri,
+            _amountOfEachNFTType,
+            clone
         );
+        return address(clone);
+    }
+
+    // /// @notice get all address of box campaign created
+    // /// @param _boxCampaign address of box campaign own
+    function getListBoxCampaign() public view returns (address[] memory) {
+        return boxCampaigns;
+    }
+
+    // /// @notice get address of box item campaign by box campaign
+    // /// @param _boxCampaign address of box campaign own
+    function getBoxItemCampaign(
+        address _boxCampaign
+    ) public view returns (address) {
+        return boxItemAddress[_boxCampaign];
     }
 }

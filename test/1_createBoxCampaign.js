@@ -15,38 +15,38 @@ require("dotenv").config();
 const privateKey = fs.readFileSync(".private_key").toString().trim();
 
 contract("BoxFactory", async function (accounts) {
-    // it("create box campaign", async function () {
-    //     const inZBoxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaign)
-    //     const inZBoxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(process.env.InZBoxItemCampaignNFT721)
-    //     const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
+    it("create box campaign", async function () {
+        const inZBoxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaign)
+        const inZBoxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(process.env.InZBoxItemCampaignNFT721)
+        const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
 
-    //     const types = [1, 2, 3, 4, 5]
-    //     const amounts = [10, 20, 30, 40, 50]
+        const types = [1, 2, 3, 4, 5]
+        const amounts = [10, 20, 30, 40, 50]
 
-    //     const createBoxLog = await inZCampaignBoxFactory.createBox(
-    //         inZBoxItemCampaignNFT721.address,
-    //         "12134",
-    //         "0x0000000000000000000000000000000000000000",
-    //         "ABC",
-    //         "ABC",
-    //         0,
-    //         1000000000000000,
-    //         true,
-    //         0,
-    //         process.env.RECEIVER
-    //     )
+        const createBoxLog = await inZCampaignBoxFactory.createBox(
+            inZBoxItemCampaignNFT721.address,
+            "12134",
+            "0x0000000000000000000000000000000000000000",
+            "ABC",
+            "ABC",
+            0,
+            1000000000000000,
+            true,
+            0,
+            process.env.RECEIVER
+        )
 
-    //     const boxCampaignClone = await createBoxLog.logs[0].args[0]
+        const boxCampaignClone = await createBoxLog.logs[0].args[0]
 
-    //     const configBoxCampaign = await inZCampaignBoxFactory.configBoxCampaign(
-    //         boxCampaignClone,
-    //         types,
-    //         amounts
-    //     )
+        const configBoxCampaign = await inZCampaignBoxFactory.configBoxCampaign(
+            boxCampaignClone,
+            types,
+            amounts
+        )
 
-    //     console.log("clone campaign: ", configBoxCampaign.logs[0].args[0])
-    //     return assert.isTrue(true);
-    // });
+        console.log("clone campaign: ", configBoxCampaign.logs[0].args[0])
+        return assert.isTrue(true);
+    });
 
     it("mint box", async function () {
         const inZBoxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaign)
