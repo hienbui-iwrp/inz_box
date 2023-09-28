@@ -22,10 +22,11 @@ contract("BoxCampaign", function (accounts) {
         const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
 
 
-        const openLog = await inZBoxCampaign.openBox(0);
+        const openLog = await inZBoxCampaign.openBox(1);
 
-        console.log("openLog: ", mintLog)
-        console.log("openLog args: ", mintLog.logs[0].args)
+        console.log("openLog: ", openLog)
+        console.log("openLog args: ", openLog.logs[0].args)
+        console.log("mint item Log args: ", openLog.logs[1].args)
 
 
         return assert.isTrue(true);

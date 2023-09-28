@@ -13,12 +13,13 @@ import "./interface/IBoxItemCampaignNFT721.sol";
 contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
     using Counters for Counters.Counter;
     // EVENT DEFINITION
-    event TokenCreated(
+    event MintFromBox(
         address _to,
         uint256 _fromBox,
         uint256 _tokenId,
         uint8 _tokenType
     );
+
     // LOCAL VARIABLE
     // Address of box campaign
     address private boxCampaign;
@@ -88,7 +89,7 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
         uint256 _boxId,
         address _to,
         uint8 _tokenType
-    ) external onlyFromBoxCampaign {
+    ) external {
         // Check token type is exist in this campaign
         require(isNFTTypeExist(_tokenType), "Token type does not exist");
 
@@ -100,7 +101,7 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
         holders[_to].push(_id);
         fromBoxId[_id] = _boxId;
 
-        emit TokenCreated(_to, _boxId, _id, _tokenType);
+        emit MintFromBox(_to, _boxId, _id, _tokenType);
     }
 
     // GETTERS
@@ -114,5 +115,9 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
             }
         }
         return false;
+    }
+
+    function getBoxCampaign() public view returns (address) {
+        return boxCampaign;
     }
 }

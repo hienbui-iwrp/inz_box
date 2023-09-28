@@ -9,7 +9,7 @@ import "./interface/ICampaignBoxFactory.sol";
 import "./InZBoxCampaign.sol";
 import "./InZBoxItemCampaignNFT721.sol";
 
-contract InZCampaignBoxFactory {
+contract InZCampaignBoxFactory is ICampaignBoxFactory {
     // EVENT
     event NewBox(
         address newBoxAddress,
@@ -51,7 +51,6 @@ contract InZCampaignBoxFactory {
     }
 
     /// @notice Create new box campaign
-    /// @param _campaignTypeNFT721 address of items collection
     /// @param _tokenUri uri of NFT box
     /// @param _payToken currency of transaction
     /// @param _name name of NFT box
@@ -62,7 +61,6 @@ contract InZCampaignBoxFactory {
     /// @param _price price of each mint acton
     /// @param _feeAddress address received fee pay to mint
     function createBox(
-        address _campaignTypeNFT721,
         string memory _tokenUri,
         address _payToken,
         string memory _name,
@@ -72,10 +70,9 @@ contract InZCampaignBoxFactory {
         bool _isAutoIncreaseId,
         uint256 _price,
         address _feeAddress
-    ) external returns (address) {
+    ) external {
         address clone = Clones.clone(boxImplementation);
         InZBoxCampaign(clone).initialize(
-            _campaignTypeNFT721,
             _tokenUri,
             _payToken,
             _name,
@@ -100,7 +97,6 @@ contract InZCampaignBoxFactory {
             _price,
             _feeAddress
         );
-        return address(clone);
     }
 
     /// @notice create new Box item campaign
@@ -117,7 +113,7 @@ contract InZCampaignBoxFactory {
         string[] memory _uri,
         uint256[] memory _amountOfEachNFTType,
         address _boxCampaign
-    ) external returns (address) {
+    ) external {
         address clone = Clones.clone(boxItemImplementation);
         InZBoxItemCampaignNFT721(clone).initialize(
             _name,
@@ -131,6 +127,8 @@ contract InZCampaignBoxFactory {
             _nftTypes,
             _amountOfEachNFTType
         );
+
+        InZBoxCampaign(_boxCampaign).setItemCampaign721(clone);
         boxItemAddress[_boxCampaign] = clone;
         emit CreateBoxItemCampaign(
             _name,
@@ -141,7 +139,6 @@ contract InZCampaignBoxFactory {
             _amountOfEachNFTType,
             clone
         );
-        return address(clone);
     }
 
     /// @notice get all address of box campaign created

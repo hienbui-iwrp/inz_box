@@ -10,6 +10,7 @@ import "./interface/IBoxItemCampaignNFT721.sol";
 contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
     event MintBox(address _to, uint256 _tokenId, uint256 _price);
     event SetCampaign721(address _old, address _new);
+    event OpenBox(address _boxCampaign, uint256 _boxId, uint8 _nftType);
     ///
     ///             EXTERNAL USING
     ///
@@ -23,7 +24,7 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
     Counters.Counter internal tokenIdCounter;
 
     // address of campaign type nft 721 to use its function
-    address private campaignTypeNFT721;
+    address private itemCampaignTypeNFT721;
 
     // map box id to bool
     mapping(uint256 => bool) private isOpened;
@@ -54,12 +55,10 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
     /// @param _payToken currency of transaction
     /// @param _name name of NFT box
     /// @param _symbol symbol of NFT box
-    /// @param _campaignTypeNFT721 address of items collection
     /// @param _price price of each mint acton
     /// @param _startTime start time of campaign can make mint
     /// @param _endTime end time of campaign can make mint
     function initialize(
-        address _campaignTypeNFT721,
         string memory _tokenUri,
         address _payToken,
         string memory _name,
@@ -74,7 +73,6 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
         feeAddress = _feeAddress;
         payToken = IERC20(_payToken);
         tokenUri = _tokenUri;
-        campaignTypeNFT721 = _campaignTypeNFT721;
         isAutoIncreasedId = _isAutoIncreaseId;
 
         totalMinted = 0;
@@ -105,10 +103,10 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
         }
     }
 
-    function setCampaign721(address _campaignTypeNFT721) public {
-        address old = _campaignTypeNFT721;
-        campaignTypeNFT721 = _campaignTypeNFT721;
-        emit SetCampaign721(old, _campaignTypeNFT721);
+    function setItemCampaign721(address _itemCampaignTypeNFT721) public {
+        address old = itemCampaignTypeNFT721;
+        itemCampaignTypeNFT721 = _itemCampaignTypeNFT721;
+        emit SetCampaign721(old, _itemCampaignTypeNFT721);
     }
 
     /// @notice buy a box
@@ -154,15 +152,16 @@ contract InZBoxCampaign is IBoxCampaign, ERC721Upgradeable {
     /// @dev mint a NFT item when open a box
     /// @param _boxId token id of minted box
     function openBox(uint256 _boxId) external {
-        require(!isOpened[_boxId], "box is already opened");
+        require(!isOpened[_boxId], "Box is already opened");
         uint8 nftType = getRandomType();
         amountOfEachType[nftType]--;
         isOpened[_boxId] = true;
-        IBoxItemCampaignNFT721(campaignTypeNFT721).mintFromBox(
+        IBoxItemCampaignNFT721(itemCampaignTypeNFT721).mintFromBox(
             _boxId,
             _ownerOf(_boxId),
             nftType
         );
+        emit OpenBox(address(this), _boxId, nftType);
     }
 
     /// @notice get type of item when open box

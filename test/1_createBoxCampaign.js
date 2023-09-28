@@ -26,7 +26,6 @@ contract("BoxFactory", async function (accounts) {
 
 
         const createBoxLog = await inZCampaignBoxFactory.createBox(
-            inZBoxItemCampaignNFT721.address,
             "12134",
             "0x0000000000000000000000000000000000000000",
             "ABC",
@@ -43,6 +42,7 @@ contract("BoxFactory", async function (accounts) {
 
         const cloneBoxCampaign = createBoxLog.logs[0].args[0]
 
+
         const createBoxItemLog = await inZCampaignBoxFactory.createBoxItem(
             "ABC",
             "ABC",
@@ -51,6 +51,8 @@ contract("BoxFactory", async function (accounts) {
             amounts,
             cloneBoxCampaign
         )
+
+
         console.log("clone item campaign log: ", createBoxItemLog)
         console.log("clone item campaign arg: ", createBoxItemLog.logs[0].args)
         return assert.isTrue(true);
