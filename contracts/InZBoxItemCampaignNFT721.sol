@@ -26,7 +26,7 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
     // All types of campaign
     uint8[] private nftTypes;
 
-    // Uri by type
+    // Uri by type, each type corresponding to uri
     mapping(uint8 => string) private typeToUri;
 
     // Token id is is opened by which box id (token id => box id)
@@ -50,12 +50,26 @@ contract InZBoxItemCampaignNFT721 is ERC721Upgradeable, IBoxItemCampaignNFT721 {
     function initialize(
         string memory _symbol,
         string memory _name,
+        uint8[] memory _nftTypes,
+        string[] memory _uri,
         address _boxCampaign
     ) external initializer {
+        require(
+            _nftTypes.length == _uri.length,
+            "NFT type and uri is not match"
+        );
+
         __ERC721_init(_name, _symbol);
         // __AccessControl_init();
         // __UUPSUpgradeable_init();
         // _transferOwnership(_adminAddress);
+
+        nftTypes = _nftTypes;
+
+        // init uri by type
+        for (uint i = 0; i < nftTypes.length; i++) {
+            typeToUri[_nftTypes[i]] = _uri[i];
+        }
 
         boxCampaign = _boxCampaign;
 
