@@ -17,16 +17,17 @@ const privateKey = fs.readFileSync(".private_key").toString().trim();
 contract("BoxCampaign", function (accounts) {
 
     it("Open box", async function () {
-        const inZBoxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaign)
+        const inZBoxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaignConfigured)
         const inZBoxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(process.env.InZBoxItemCampaignNFT721)
         const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
 
 
-        const openLog = await inZBoxCampaign.openBox(1);
+        const setBoxLog = await inZBoxItemCampaignNFT721.setBoxCampaign(inZBoxCampaign.address)
+        console.log("setBoxLog: ", setBoxLog)
 
+        const openLog = await inZBoxCampaign.openBox(0);
         console.log("openLog: ", openLog)
-        console.log("openLog args: ", openLog.logs[0].args)
-        console.log("mint item Log args: ", openLog.logs[1].args)
+        console.log("openLog args: ", openLog.logs[openLog.logs.length - 1].args)
 
 
         return assert.isTrue(true);

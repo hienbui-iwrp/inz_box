@@ -17,14 +17,14 @@ const privateKey = fs.readFileSync(".private_key").toString().trim();
 contract("BoxCampaign", function (accounts) {
 
   it("mint box", async function () {
-    const inZBoxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaign)
+    const inZBoxCampaign = await InZBoxCampaign.at(process.env.InZBoxCampaignConfigured)
     const inZBoxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(process.env.InZBoxItemCampaignNFT721)
     const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
 
-    const mintLog = await inZBoxCampaign.mintBox(0);
+    const mintLog = await inZBoxCampaign.mintBox();
 
     console.log("mintLog: ", mintLog)
-    console.log("mintLog args: ", mintLog.logs[0].args)
+    console.log("mintLog args: ", mintLog.logs[mintLog.logs.length - 1].args)
 
 
     return assert.isTrue(true);

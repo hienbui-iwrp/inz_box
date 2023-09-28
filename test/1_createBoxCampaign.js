@@ -20,41 +20,39 @@ contract("BoxFactory", async function (accounts) {
         const inZBoxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(process.env.InZBoxItemCampaignNFT721)
         const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(process.env.InZCampaignBoxFactory)
 
-        const types = [1, 2, 3, 4, 5]
-        const uri = ["1", "2", "3", "4", "5"]
-        const amounts = [10, 20, 30, 40, 50]
+        var types = [1, 2, 3, 4, 5]
+        var supplies = [10, 20, 30, 40, 50]
+        var nullAddress = "0x0000000000000000000000000000000000000000"
 
 
         const createBoxLog = await inZCampaignBoxFactory.createBox(
-            "12134",
-            "0x0000000000000000000000000000000000000000",
-            "ABC",
-            "ABC",
+            inZBoxItemCampaignNFT721.address,
+            "/uri",
+            nullAddress,
+            "ABC name",
+            "ABC symbol",
             0,
-            1000000000000000,
-            true,
+            9000000000000000,
             0,
             process.env.RECEIVER
         )
 
         console.log("clone campaign log: ", createBoxLog)
-        console.log("clone campaign arg: ", createBoxLog.logs[0].args)
+        console.log("clone campaign arg: ", createBoxLog.logs[createBoxLog.logs.length - 1].args)
 
-        const cloneBoxCampaign = createBoxLog.logs[0].args[0]
+        const cloneBoxCampaign = createBoxLog.logs[createBoxLog.logs.length - 1].args[0]
+        console.log("clone address: ", cloneBoxCampaign)
 
 
-        const createBoxItemLog = await inZCampaignBoxFactory.createBoxItem(
-            "ABC",
-            "ABC",
+        const configLog = await inZCampaignBoxFactory.configTypeInCampaign(
             types,
-            uri,
-            amounts,
+            supplies,
             cloneBoxCampaign
         )
 
 
-        console.log("clone item campaign log: ", createBoxItemLog)
-        console.log("clone item campaign arg: ", createBoxItemLog.logs[0].args)
+        console.log("item log: ", configLog)
+        console.log("item arg: ", configLog.logs[configLog.logs.length - 1].args)
         return assert.isTrue(true);
     });
 
