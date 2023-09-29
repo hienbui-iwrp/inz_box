@@ -1,9 +1,9 @@
-const web3 = require('web3')
+const web3 = require("web3");
 const fs = require("fs");
 
-var InzCampaignBoxFactory = artifacts.require("InzCampaignBoxFactory");
-var InzCampaignTypesNFT1155 = artifacts.require("InzCampaignTypesNFT1155");
-var InzBoxCampaign = artifacts.require("InzBoxCampaign");
+var InZBoxCampaign = artifacts.require("InZBoxCampaign");
+var InZBoxItemCampaignNFT721 = artifacts.require("InZBoxItemCampaignNFT721");
+var InZCampaignBoxFactory = artifacts.require("InZCampaignBoxFactory");
 
 /*
  * uncomment accounts to access the test accounts made available by the
@@ -12,37 +12,64 @@ var InzBoxCampaign = artifacts.require("InzBoxCampaign");
  */
 require("dotenv").config();
 
-const privateKey = fs.readFileSync(".private_key").toString().trim();
+// const privateKey = fs.readFileSync(".private_key").toString().trim();
+const privateKey = "a1a3605d9a4af5fa38d2c7cb7c410bf2bd8473722ef63e15b80322e62beff826";
 
 contract("BoxCollection", function (accounts) {
     it("signature", async function () {
-        var _inzCampaignTypesNFT1155 = await InzCampaignTypesNFT1155.at(process.env.ERC1155RandomCollection);
-        var _boxCampaign = await BoxCampaign.at(process.env.BoxCollection);
-        const txData =
-        {
-            signer: process.env.SIGNER,
-            _to: accounts[1]
-        }
+        const inZBoxCampaign = await InZBoxCampaign.at(
+            process.env.InZBoxCampaignConfigured
+        );
+        const inZBoxItemCampaignNFT721 = await InZBoxItemCampaignNFT721.at(
+            process.env.InZBoxItemCampaignNFT721
+        );
+        const inZCampaignBoxFactory = await InZCampaignBoxFactory.at(
+            process.env.InZCampaignBoxFactory
+        );
+
+        console.log("account: ", accounts);
 
 
-        // const message = web3.utils.keccak256(web3.eth.abi.encodeFunctionSignature(txData._to))
+        const _encode = web3.eth.abi.encodeParameters(
+            ["address", "address", "address"],
+            [
+                accounts[0],
+                process.env.InZBoxCampaignConfigured,
+                process.env.InZBoxItemCampaignNFT721,
+            ]
+        );
 
-        // const message = web3.utils.soliditySha3(txData._to)
-        // const message = web3.utils.encodePacked(accounts[1])
-        const message = web3.utils.soliditySha3(web3.utils.keccak256(web3.eth.abi.encodeParameters(["address"], [accounts[1]])))
+        console.log("_encode: ", _encode)
 
-        let signature = web3.eth.accounts.sign(message, `0x${privateKey}`)
-        console.log(signature)
+        const _digest = web3.utils.keccak256(_encode);
+
+        console.log("_digest: ", _digest);
+
+        let signature = web3.eth.accounts.sign(web3.eth.accounts.hashMessage(_digest), `0x${privateKey}`);
+        console.log(signature);
         // let recover = web3.eth.accounts.recover(signature.message, signature.v, signature.r, signature.s)
 
         // console.log("recover: ", recover)
 
-        let sign = await _boxCampaign.getSigner(accounts[1], { v: signature.v, r: signature.r, s: signature.s, })
-        console.log("signer: ", sign)
+        let data = await inZBoxCampaign.getData();
+        console.log("data: ", data);
 
-        let msg = await _boxCampaign.getMessage(accounts[1], { v: signature.v, r: signature.r, s: signature.s, })
-        console.log("msg: ", msg)
-        console.log("message hash: ", signature.messageHash)
+        let signer = await inZBoxCampaign.getSigner({
+            v: signature.v,
+            r: signature.r,
+            s: signature.s,
+            deadline: 1000000000,
+        });
+        console.log("signer: ", signer);
+
+        let signerWithHash = await inZBoxCampaign.getSignerWithMessage(web3.eth.accounts.hashMessage(_digest), {
+            v: signature.v,
+            r: signature.r,
+            s: signature.s,
+            deadline: 1000000000,
+        });
+        console.log("signerWithHash: ", signerWithHash);
+
 
         return assert.isTrue(true);
     });

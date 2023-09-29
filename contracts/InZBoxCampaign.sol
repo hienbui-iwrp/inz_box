@@ -47,6 +47,10 @@ contract InZBoxCampaign is
     using Counters for Counters.Counter;
     // Address will receive fee from mint
     address private feeAddress;
+
+    // Address sign signature from backend
+    address private signer;
+
     IERC20 payToken;
     // tokenURI of box
     string private tokenUri;
@@ -96,7 +100,8 @@ contract InZBoxCampaign is
         uint256 _startTime,
         uint256 _endTime,
         uint256 _price,
-        address _feeAddress
+        address _feeAddress,
+        address _signer
     ) public initializer {
         __ERC721_init(_name, _symbol);
         itemCampaignTypeNFT721 = _itemCampaign;
@@ -111,6 +116,7 @@ contract InZBoxCampaign is
         price = _price;
         campaignStartTime = _startTime;
         campaignEndTime = _endTime;
+        signer = _signer;
 
         __AccessControl_init();
         _transferOwnership(tx.origin);
@@ -154,9 +160,74 @@ contract InZBoxCampaign is
         emit SetCampaign721(old, _itemCampaignTypeNFT721);
     }
 
+    function verifySignature(
+        address _itemCollection,
+        Proof memory _proof
+    ) private view returns (bool) {
+        if (signer == address(0x0)) {
+            return true;
+        }
+        bytes32 digest = keccak256(
+            abi.encode(getChainID(), tx.origin, address(this), _itemCollection)
+        );
+        address signatory = ecrecover(digest, _proof.v, _proof.r, _proof.s);
+        return signatory == signer && _proof.deadline >= block.timestamp;
+    }
+
+    /// @notice verify if signer is from back end
+    /// @param _proof proof of signature
+    function verifySignature(Proof memory _proof) private view returns (bool) {
+        if (signer == address(0x0)) {
+            return true;
+        }
+        bytes32 digest = keccak256(
+            abi.encode(
+                getChainID(),
+                tx.origin,
+                address(this),
+                itemCampaignTypeNFT721
+            )
+        );
+        address signatory = ecrecover(digest, _proof.v, _proof.r, _proof.s);
+        return signatory == signer && _proof.deadline >= block.timestamp;
+    }
+
+    function getData() public view returns (address, address, address) {
+        return (tx.origin, address(this), itemCampaignTypeNFT721);
+    }
+
+    function getSigner(
+        Proof memory _proof
+    ) public view returns (address, address, bytes memory, bytes32) {
+        bytes memory encode = abi.encode(
+            // getChainID(),
+            tx.origin,
+            address(this),
+            itemCampaignTypeNFT721
+        );
+        bytes32 digest = keccak256(encode);
+        address signatory = ecrecover(digest, _proof.v, _proof.r, _proof.s);
+        return (signatory, signer, encode, digest);
+    }
+
+    function getSignerWithMessage(
+        bytes32 messageHash,
+        Proof memory _proof
+    ) public view returns (address, address) {
+        address signatory = ecrecover(
+            messageHash,
+            _proof.v,
+            _proof.r,
+            _proof.s
+        );
+        return (signatory, signer);
+    }
+
     /// @notice buy a box
     /// @dev mint a NFT box to an address
-    function mintBox() external payable {
+    /// @param _proof proof of signature
+    function mintBox(Proof memory _proof) external payable {
+        require(verifySignature(_proof), "Wrong signer");
         require(true, "Not enough supply for");
         require(
             campaignStartTime <= block.timestamp,
@@ -227,6 +298,15 @@ contract InZBoxCampaign is
         }
 
         return nftTypes[0];
+    }
+
+    /// @notice Function return chainID of current implemented chain
+    function getChainID() private view returns (uint256) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
     }
 
     /// @notice withdraw the remaining native coins in current campign

@@ -71,6 +71,10 @@ module.exports = {
     // options below to some value.
     //
     development: {
+      // provider: () => new HDWalletProvider(
+      //   privateKey,
+      //   "http://127.0.0.1:9545",
+      // ),
       host: "127.0.0.1",     // Localhost (default: none)
       port: 9545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)

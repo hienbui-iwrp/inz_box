@@ -92,7 +92,8 @@ contract InZCampaignBoxFactory is ICampaignBoxFactory, AccessControl {
             _startTime,
             _endTime,
             _price,
-            _feeAddress
+            _feeAddress,
+            msg.sender
         );
 
         boxCampaigns.push(address(clone));
