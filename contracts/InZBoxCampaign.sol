@@ -227,7 +227,7 @@ contract InZBoxCampaign is
     /// @dev mint a NFT box to an address
     /// @param _proof proof of signature
     function mintBox(Proof memory _proof) external payable {
-        require(verifySignature(_proof), "Wrong signer");
+        // require(verifySignature(_proof), "Wrong signer");
         require(true, "Not enough supply for");
         require(
             campaignStartTime <= block.timestamp,

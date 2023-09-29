@@ -127,13 +127,27 @@ module.exports = {
 
     sepolia: {
       provider: () =>
-        new HDWalletProvider(privateKey, `https://eth-sepolia.g.alchemy.com/v2/JB8kkL-2pa1tGHVr30IudOMVQGz7ll8U`),
+        new HDWalletProvider(privateKey, `https://sepolia.infura.io/v3/0748f9ff8eba47a28b30e8b96084714f`),
       network_id: "11155111",
-      gas: 3000000,
-      blockLimit: 30000000,
-      timeoutBlocks: 10000, // Set the timeout for transactions
-      networkCheckTimeout: 1000000,
+      gas: 399920,
+      // blockLimit: 300000000,
+      timeoutBlocks: 1000, // Set the timeout for transactions
+      // networkCheckTimeout: 1000000,
+      gasPrice: 100000,
+      // gaslimit: 2099920,
+      // gasLimit: 2099920,
       skipDryRun: true,// Skip the dry run option
+    },
+
+    goerli_testnet: {
+      provider: () =>
+        new HDWalletProvider(privateKey, `https://rpc.ankr.com/eth_goerli`),
+      network_id: 5,
+      skipDryRun: true,
+      production: true,
+      gasPrice: 128,
+      timeoutBlocks: 200,
+      confirmations: 2,
     },
   },
 

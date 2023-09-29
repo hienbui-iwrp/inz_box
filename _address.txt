@@ -5,6 +5,9 @@ deploy: truffle migrate --compile-none
 test: truffle test ./test/test.js --compile-none --migrate-none
 
 --address
-InZBoxItemCampaignNFT721=0x340CD54335C0c6102Ac593E26D658fB76636EA92
-InZBoxCampaign=0x500390c4bD67b972819f8D89CF3e571F59830274
-InZCampaignBoxFactory=0x09948744Bc47432d71891123d7aa58F2c82f6d53
+
+InZBoxItemCampaignNFT721=0x97a2334F1b94D506CEE1a1A2f66ec67d784abb97
+InZBoxCampaign=0x05DfDaCb35A1D47C3A6BCE4cAa3A57fDDAAF075b
+InZCampaignBoxFactory=0xa013cFa3133589D45450A6BAaF5d58087A06e824
+
+InZBoxCampaignConfigured=0x6Afe7510A64Ae37d2cFbb910032c87d2631d8111
